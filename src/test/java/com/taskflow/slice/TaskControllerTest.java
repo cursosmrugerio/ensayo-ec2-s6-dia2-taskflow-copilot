@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.hamcrest.Matchers.matchesPattern;
+import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
@@ -89,7 +90,7 @@ class TaskControllerTest {
                 .andExpect(jsonPath("$[0].title").value("Primera"));
     }
 
-    // ==================== S6 Día 2: listado nuevo ====================
+    // ==================== S6 Día 2: listados nuevos ====================
     // La lista la fija el mock: aquí se prueba que la RUTA llega al método nuevo (200, no el 400 de
     // /tasks/{id}) y que el JSON trae los campos del TaskResponse. El orden se prueba en TaskServiceTest.
 
@@ -103,6 +104,18 @@ class TaskControllerTest {
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].id").value(7))
                 .andExpect(jsonPath("$[0].title").value("Corregir bug de fechas"));
+    }
+
+    @Test
+    void getUnassigned_retorna200ConLasTareasDelServicio() throws Exception {
+        when(taskService.sinResponsable()).thenReturn(List.of(
+                tareaConFecha(4L, "Escribir tests MockMvc", null, LocalDate.now().plusDays(7))));
+
+        mockMvc.perform(get("/tasks/unassigned"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(4))
+                .andExpect(jsonPath("$[0].assigneeId").value(nullValue()));
     }
 
     @Test
